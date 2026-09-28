@@ -1,0 +1,6 @@
+[global]
+disable = ["MD013"]
+respect-gitignore = true
+
+[MD024]
+siblings-only = true

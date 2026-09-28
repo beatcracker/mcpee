@@ -1,0 +1,13 @@
+listen: 127.0.0.1:8080
+
+backends:
+  - name: exec
+    command: fs-mcp-rs
+
+  - name: my-stdio-mcp
+    command: my-mcp-binary
+    args:
+      - foxtrot
+      - unicorn
+    env:
+      CHARLIE: KILO

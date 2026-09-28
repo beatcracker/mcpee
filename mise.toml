@@ -1,0 +1,68 @@
+[settings]
+lockfile = true
+lockfile_platforms = ["linux-x64", "macos-arm64", "windows-x64"]
+
+[tools]
+go = "1.27.1"
+"aqua:rvben/rumdl" = "latest"
+"aqua:tamasfe/taplo" = "latest"
+
+[vars]
+rumdl_config = ".config/rumdl.toml"
+taplo_config = ".config/taplo.toml"
+toml_glob = "**/*.toml"
+
+[env]
+CGO_ENABLED = "0"
+TAPLO_CONFIG = "{{vars.taplo_config}}"
+RUST_LOG = "error"
+
+[tasks.check]
+description = "Check all files"
+run = [
+  "rumdl check --config {{vars.rumdl_config}}",
+  "taplo format --check {{vars.toml_glob}}",
+  "gofmt -l .",
+  "go mod tidy --diff",
+  "go vet ./...",
+  "go test ./...",
+]
+
+[tasks.fix]
+description = "Format all files"
+run = [
+  "gofmt -l -s -w .",
+  "go mod tidy -v",
+  "rumdl fmt --config {{vars.rumdl_config}}",
+  "taplo format {{vars.toml_glob}}",
+]
+
+[tasks.build]
+description = "Build mcpee binary"
+run = ["go build ./cmd/mcpee"]
+
+[tasks.release]
+description = "Build release binaries"
+run = [
+  "mkdir -p dist",
+  "GOOS=windows GOARCH=amd64 go build -trimpath -o dist/mcpee-windows-amd64.exe ./cmd/mcpee",
+  "GOOS=darwin GOARCH=arm64 go build -trimpath -o dist/mcpee-darwin-arm64 ./cmd/mcpee",
+  "GOOS=linux GOARCH=amd64 go build -trimpath -o dist/mcpee-linux-amd64 ./cmd/mcpee",
+]
+
+[tasks.test]
+description = "Run tests"
+run = ["go test ./..."]
+
+[tasks.run]
+description = "Run mcpee"
+run = ["go run ./cmd/mcpee"]
+
+[tasks.publish]
+description = "Tag and publish a release"
+hide = true
+depends = ["check"]
+usage = '''
+arg "<version>" help="Release version, e.g. 0.1.0"
+'''
+run = ["git tag v{{ usage.version }}", "git push origin v{{ usage.version }}"]
