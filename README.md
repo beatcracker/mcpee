@@ -4,7 +4,7 @@ _Because too many MCP routers turned out to be quite poo._
 
 Run multiple local MCP servers (`stdio`), aggregate, expose as HTTP. Done.
 
-🚽 No retry/restart layer, plugin system, policy engine, metrics endpoint, protocol models, authentication or custom JSON-RPC bullshit.
+🚽 No request retries, backend supervision, restart policy, plugin system, policy engine, metrics endpoint, protocol models, authentication or custom JSON-RPC bullshit.
 
 ## 📖 Design tenets
 
