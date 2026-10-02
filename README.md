@@ -30,7 +30,8 @@ Run multiple local MCP servers (`stdio`), aggregate, expose as HTTP. Done.
 - frontend: **stateless** Streamable HTTP at `/mcp`
 - default listen address: `127.0.0.1:8080`
 - backends: `stdio` MCP servers owned for the process lifetime
-- backend commands may be wrappers, but must preserve stdin/stdout; `mcpee` manages only the configured direct child process
+- backend commands may be wrappers, but must preserve stdin/stdout.
+  `mcpee` manages only the configured direct child process
 - projected names: `<backend>__<tool>`
 - startup fails if any backend cannot connect/list tools, or if projection is invalid
 - descriptions, schemas, annotations, icons, results, errors, and request cancellation are passed through via the official SDK
