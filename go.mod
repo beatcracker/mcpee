@@ -3,7 +3,8 @@ module mcpee
 go 1.27.1
 
 require (
-	github.com/modelcontextprotocol/go-sdk v1.8.0
+	github.com/allenai/bytefmt v0.1.2
+	github.com/modelcontextprotocol/go-sdk v1.8.1-0.20261002150932-ae855ca2f24e
 	gopkg.in/yaml.v3 v3.0.1
 )
 

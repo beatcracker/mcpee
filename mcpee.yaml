@@ -9,5 +9,8 @@ backends:
     args:
       - foxtrot
       - unicorn
+    cwd: .
+    inherit_env: true
+    max_frame_size: 32MiB
     env:
       CHARLIE: KILO

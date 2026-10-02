@@ -34,7 +34,13 @@ func main() {
 			os.Exit(1)
 		}
 		backends = append(backends, b)
-		log.Info("backend connected", "backend", b.Name())
+		log.Info(
+			"backend connected",
+			"backend", b.Name(),
+			"cwd", bc.Cwd,
+			"inherit_env", bc.InheritEnv,
+			"max_frame_bytes", bc.EffectiveMaxFrameBytes(),
+		)
 		log.Info("backend catalog loaded", "backend", b.Name(), "tools", len(b.Catalog()))
 	}
 	defer mcpee.CloseBackends(backends)

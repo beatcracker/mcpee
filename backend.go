@@ -208,10 +208,21 @@ func ConnectStdioBackend(ctx context.Context, cfg BackendConfig) (Backend, error
 	}, nil
 }
 
-func connectStdioSession(ctx context.Context, cfg BackendConfig) (clientSession, []*mcp.Tool, error) {
+func backendCommand(cfg BackendConfig) (*exec.Cmd, error) {
+	cwd, err := effectiveCwd(cfg.Cwd)
+	if err != nil {
+		return nil, err
+	}
+
 	cmd := exec.Command(cfg.Command, cfg.Args...)
+	cmd.Dir = cwd
 	cmd.Stderr = os.Stderr
-	cmd.Env = append([]string{}, os.Environ()...)
+	if cfg.InheritEnv {
+		cmd.Env = append([]string{}, os.Environ()...)
+	} else {
+		cmd.Env = []string{}
+	}
+
 	keys := make([]string, 0, len(cfg.Env))
 	for k := range cfg.Env {
 		keys = append(keys, k)
@@ -220,9 +231,27 @@ func connectStdioSession(ctx context.Context, cfg BackendConfig) (clientSession,
 	for _, k := range keys {
 		cmd.Env = append(cmd.Env, k+"="+cfg.Env[k])
 	}
+	return cmd, nil
+}
+
+func (cfg BackendConfig) EffectiveMaxFrameBytes() int {
+	if cfg.MaxFrameSize == 0 {
+		return mcp.DefaultMaxLineLength
+	}
+	return cfg.MaxFrameSize
+}
+
+func connectStdioSession(ctx context.Context, cfg BackendConfig) (clientSession, []*mcp.Tool, error) {
+	cmd, err := backendCommand(cfg)
+	if err != nil {
+		return nil, nil, fmt.Errorf("prepare backend %q: %w", cfg.Name, err)
+	}
 
 	client := mcp.NewClient(&mcp.Implementation{Name: serverName, Version: Version}, nil)
-	session, err := client.Connect(ctx, &mcp.CommandTransport{Command: cmd}, nil)
+	session, err := client.Connect(ctx, &mcp.CommandTransport{
+		Command:       cmd,
+		MaxLineLength: cfg.MaxFrameSize,
+	}, nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("connect backend %q: %w", cfg.Name, err)
 	}

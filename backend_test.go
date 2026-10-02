@@ -3,6 +3,8 @@ package mcpee
 import (
 	"context"
 	"errors"
+	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -277,4 +279,69 @@ func TestStdioBackendProtocolErrorKeepsSession(t *testing.T) {
 	if connects.Load() != 0 {
 		t.Fatalf("reconnects = %d, want 0", connects.Load())
 	}
+}
+
+func TestBackendCommandInheritsAndOverridesEnv(t *testing.T) {
+	t.Setenv("MCPEE_TEST_ENV", "parent")
+
+	cfg := BackendConfig{
+		Command:    os.Args[0],
+		Cwd:        t.TempDir(),
+		InheritEnv: true,
+		Env: map[string]string{
+			"MCPEE_TEST_ENV":   "override",
+			"MCPEE_TEST_EXTRA": "configured",
+		},
+	}
+	cmd, err := backendCommand(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if cmd.Dir != cfg.Cwd {
+		t.Fatalf("cwd = %q, want %q", cmd.Dir, cfg.Cwd)
+	}
+	env := envMap(cmd.Environ())
+	if env["MCPEE_TEST_ENV"] != "override" {
+		t.Fatalf("MCPEE_TEST_ENV = %q, want override", env["MCPEE_TEST_ENV"])
+	}
+	if env["MCPEE_TEST_EXTRA"] != "configured" {
+		t.Fatalf("MCPEE_TEST_EXTRA = %q, want configured", env["MCPEE_TEST_EXTRA"])
+	}
+}
+
+func TestBackendCommandCanSkipInheritedEnv(t *testing.T) {
+	t.Setenv("MCPEE_TEST_SECRET", "secret")
+
+	cfg := BackendConfig{
+		Command:    os.Args[0],
+		Cwd:        t.TempDir(),
+		InheritEnv: false,
+		Env: map[string]string{
+			"MCPEE_TEST_ONLY": "configured",
+		},
+	}
+	cmd, err := backendCommand(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	env := envMap(cmd.Environ())
+	if _, ok := env["MCPEE_TEST_SECRET"]; ok {
+		t.Fatal("inherited environment leaked into backend environment")
+	}
+	if env["MCPEE_TEST_ONLY"] != "configured" {
+		t.Fatalf("MCPEE_TEST_ONLY = %q, want configured", env["MCPEE_TEST_ONLY"])
+	}
+}
+
+func envMap(env []string) map[string]string {
+	out := make(map[string]string, len(env))
+	for _, kv := range env {
+		k, v, ok := strings.Cut(kv, "=")
+		if ok {
+			out[k] = v
+		}
+	}
+	return out
 }
