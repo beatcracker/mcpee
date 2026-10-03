@@ -24,7 +24,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v4
-      - run: mise run release
+      - run: mise run release "${GITHUB_REF_NAME#v}"
+      - run: test "$(dist/mcpee-linux-amd64 --version)" = "mcpee ${GITHUB_REF_NAME#v}"
       - run: gh release create "$GITHUB_REF_NAME" dist/* --generate-notes
         env:
           GH_TOKEN: ${{ github.token }}

@@ -43,11 +43,14 @@ run = ["go build ./cmd/mcpee"]
 
 [tasks.release]
 description = "Build release binaries"
+usage = '''
+arg "<version>" help="Release version, e.g. 0.2.0"
+'''
 run = [
   "mkdir -p dist",
-  "GOOS=windows GOARCH=amd64 go build -trimpath -o dist/mcpee-windows-amd64.exe ./cmd/mcpee",
-  "GOOS=darwin GOARCH=arm64 go build -trimpath -o dist/mcpee-darwin-arm64 ./cmd/mcpee",
-  "GOOS=linux GOARCH=amd64 go build -trimpath -o dist/mcpee-linux-amd64 ./cmd/mcpee",
+  "GOOS=windows GOARCH=amd64 go build -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} -o dist/mcpee-windows-amd64.exe ./cmd/mcpee",
+  "GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} -o dist/mcpee-darwin-arm64 ./cmd/mcpee",
+  "GOOS=linux GOARCH=amd64 go build -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} -o dist/mcpee-linux-amd64 ./cmd/mcpee",
 ]
 
 [tasks.test]
@@ -65,4 +68,13 @@ depends = ["check"]
 usage = '''
 arg "<version>" help="Release version, e.g. 0.1.0"
 '''
-run = ["git tag v{{ usage.version }}", "git push origin v{{ usage.version }}"]
+run = [
+  "go run -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} ./cmd/mcpee --version | grep -Fx 'mcpee {{ usage.version }}' >/dev/null",
+  "git tag v{{ usage.version }}",
+  "git push origin v{{ usage.version }}",
+]
+run_windows = [
+  'cmd /d /s /c ""go run -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} ./cmd/mcpee --version | more | findstr /x /c:"mcpee {{ usage.version }}" >nul""',
+  'git tag v{{ usage.version }}',
+  'git push origin v{{ usage.version }}',
+]

@@ -10,7 +10,8 @@ import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-const Version = "0.1.0"
+var Version = "wip"
+
 const serverName = "mcpee"
 
 type catalogReconciler interface {

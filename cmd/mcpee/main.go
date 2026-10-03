@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log/slog"
 	"mcpee"
 	"net/http"
@@ -16,7 +17,12 @@ var defaultConfigFile = "mcpee.yaml"
 
 func main() {
 	configPath := flag.String("config", defaultConfigFile, "path to configuration file")
+	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
+	if *showVersion {
+		fmt.Println("mcpee", mcpee.Version)
+		return
+	}
 	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
 	cfg, err := mcpee.LoadConfig(*configPath)
 	if err != nil {
@@ -58,7 +64,7 @@ func main() {
 		defer cancel()
 		_ = httpServer.Shutdown(sdctx)
 	}()
-	log.Info("server listening", "address", cfg.Listen, "endpoint", "/mcp", "tools", len(catalog.Tools()))
+	log.Info("server listening", "version", mcpee.Version, "address", cfg.Listen, "endpoint", "/mcp", "tools", len(catalog.Tools()))
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Error("server failed", "error", err)
 		os.Exit(1)
