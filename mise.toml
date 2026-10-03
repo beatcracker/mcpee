@@ -61,9 +61,8 @@ run = ["go test ./..."]
 description = "Run mcpee"
 run = ["go run ./cmd/mcpee"]
 
-[tasks.publish]
-description = "Tag and publish a release"
-hide = true
+[tasks.tag-release]
+description = "Create a release tag"
 depends = ["check"]
 usage = '''
 arg "<version>" help="Release version, e.g. 0.1.0"
@@ -71,10 +70,12 @@ arg "<version>" help="Release version, e.g. 0.1.0"
 run = [
   "go run -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} ./cmd/mcpee --version | grep -Fx 'mcpee {{ usage.version }}' >/dev/null",
   "git tag v{{ usage.version }}",
-  "git push origin v{{ usage.version }}",
 ]
 run_windows = [
   'cmd /d /s /c ""go run -trimpath -ldflags=-X=mcpee.Version={{ usage.version }} ./cmd/mcpee --version | more | findstr /x /c:"mcpee {{ usage.version }}" >nul""',
   'git tag v{{ usage.version }}',
-  'git push origin v{{ usage.version }}',
 ]
+
+[tasks.push-tags]
+description = "Push release tags"
+run = ["git push origin --tags"]
