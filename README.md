@@ -39,6 +39,8 @@ Run multiple local MCP servers (`stdio`), aggregate, expose as HTTP. Done.
 
 ## Configuration
 
+Use `mcpee -t` to validate the configuration without starting backends. Failures return a non-zero exit code. Run `mcpee -h` for command-line options.
+
 ```yaml
 listen: 127.0.0.1:8080
 
